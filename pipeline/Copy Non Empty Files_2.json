@@ -1,9 +1,9 @@
 {
-	"name": "Copy non empty files",
+	"name": "Copy Non Empty Files_2",
 	"properties": {
 		"activities": [
 			{
-				"name": "Input folder Metadata",
+				"name": "MetaData - ChildItems",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -24,7 +24,6 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobStorageReadSettings",
-						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -33,11 +32,11 @@
 				}
 			},
 			{
-				"name": "Loop file Name",
+				"name": "ForEach1",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Input folder Metadata",
+						"activity": "MetaData - ChildItems",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -46,76 +45,17 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Input folder Metadata').output.childItems",
+						"value": "@activity('MetaData - ChildItems').output.childItems",
 						"type": "Expression"
 					},
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Set Filename",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "Filename",
-								"value": {
-									"value": "@item().name",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "File Content Lookup",
-							"type": "Lookup",
-							"dependsOn": [
-								{
-									"activity": "Set Filename",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"storeSettings": {
-										"type": "AzureBlobStorageReadSettings",
-										"recursive": true,
-										"wildcardFileName": {
-											"value": "@variables('Filename')",
-											"type": "Expression"
-										},
-										"enablePartitionDiscovery": false
-									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"dataset": {
-									"referenceName": "InputFolder_DS_lookup",
-									"type": "DatasetReference"
-								},
-								"firstRowOnly": false
-							}
-						},
-						{
 							"name": "If Condition1",
 							"type": "IfCondition",
 							"dependsOn": [
 								{
-									"activity": "File Content Lookup",
+									"activity": "Get Metadata-Size",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -124,12 +64,12 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@greater(activity('File Content Lookup').output.count,0)",
+									"value": "@greater(activity('Get Metadata-Size').output.size, 0)",
 									"type": "Expression"
 								},
 								"ifTrueActivities": [
 									{
-										"name": "Copy data to output",
+										"name": "Copy data",
 										"type": "Copy",
 										"dependsOn": [],
 										"policy": {
@@ -147,7 +87,7 @@
 													"type": "AzureBlobStorageReadSettings",
 													"recursive": true,
 													"wildcardFileName": {
-														"value": "@variables('Filename')",
+														"value": "@activity('Get Metadata-Size').output.itemName",
 														"type": "Expression"
 													},
 													"enablePartitionDiscovery": false
@@ -192,16 +132,47 @@
 									}
 								]
 							}
+						},
+						{
+							"name": "Get Metadata-Size",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "InputFolder_DS_lookup",
+									"type": "DatasetReference",
+									"parameters": {
+										"Filename": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"size",
+									"itemName"
+								],
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
 						}
 					]
 				}
 			}
 		],
-		"variables": {
-			"Filename": {
-				"type": "String"
-			}
-		},
 		"annotations": []
 	}
 }
