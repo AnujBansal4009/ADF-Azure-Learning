@@ -1,0 +1,12 @@
+{
+	"name": "lS_HttpServer_Dummy",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": " https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-zip-file.zip",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
