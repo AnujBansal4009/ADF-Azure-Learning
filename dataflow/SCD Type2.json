@@ -1,0 +1,149 @@
+{
+	"name": "SCD Type2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Emp_dataSet",
+						"type": "DatasetReference"
+					},
+					"name": "Empsource"
+				},
+				{
+					"dataset": {
+						"referenceName": "Emp_Sink_Dataset",
+						"type": "DatasetReference"
+					},
+					"name": "SinkDataSet"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Emp_Sink_Dataset",
+						"type": "DatasetReference"
+					},
+					"name": "sink"
+				},
+				{
+					"dataset": {
+						"referenceName": "Emp_Sink_Dataset",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SrcHash"
+				},
+				{
+					"name": "SinkHash"
+				},
+				{
+					"name": "existsInSink"
+				},
+				{
+					"name": "isActive"
+				},
+				{
+					"name": "RemoveHash"
+				},
+				{
+					"name": "existsIDinSRC"
+				},
+				{
+					"name": "UpdatedExists"
+				},
+				{
+					"name": "IsActive0"
+				},
+				{
+					"name": "UpdateExisting"
+				},
+				{
+					"name": "RemoveHash2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmpID as integer,",
+				"          EmpName as string,",
+				"          DeptID as integer,",
+				"          Salary as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Empsource",
+				"source(output(",
+				"          EmpID as integer,",
+				"          EmpName as string,",
+				"          DeptID as integer,",
+				"          Salary as integer,",
+				"          isActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SinkDataSet",
+				"Empsource derive(hash = md5(EmpID,EmpName,DeptID,Salary)) ~> SrcHash",
+				"SinkDataSet derive(hash = md5(EmpID,EmpName,DeptID,Salary)) ~> SinkHash",
+				"SrcHash, SinkHash exists(SrcHash@hash == SinkHash@hash,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> existsInSink",
+				"existsInSink derive(isActive = 1) ~> isActive",
+				"isActive select(mapColumn(",
+				"          EmpID,",
+				"          EmpName,",
+				"          DeptID,",
+				"          Salary,",
+				"          isActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveHash",
+				"SinkHash, SrcHash exists(SinkDataSet@EmpID == Empsource@EmpID,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> existsIDinSRC",
+				"existsIDinSRC, SrcHash exists(SinkHash@hash == SrcHash@hash,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> UpdatedExists",
+				"UpdatedExists derive(isActive = 0) ~> IsActive0",
+				"IsActive0 alterRow(upsertIf(true())) ~> UpdateExisting",
+				"UpdateExisting select(mapColumn(",
+				"          EmpID,",
+				"          EmpName,",
+				"          DeptID,",
+				"          Salary,",
+				"          isActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveHash2",
+				"RemoveHash sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmpID as string,",
+				"          EmpName as string,",
+				"          DeptID as string,",
+				"          Salary as string",
+				"     ),",
+				"     partitionFileNames:['New updated SCD employees.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink",
+				"RemoveHash2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmpID as string,",
+				"          EmpName as string,",
+				"          DeptID as string,",
+				"          Salary as string",
+				"     ),",
+				"     partitionFileNames:['Non Active SCD employees.csv'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}
