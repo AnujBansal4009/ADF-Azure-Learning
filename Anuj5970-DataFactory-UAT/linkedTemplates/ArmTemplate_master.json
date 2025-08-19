@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_BlobStorage'"
 		},
+		"lS_HttpServer_Dummy_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": " https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-zip-file.zip"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -47,6 +51,9 @@
 					},
 					"ls_BlobStorage_connectionString": {
 						"value": "[parameters('ls_BlobStorage_connectionString')]"
+					},
+					"lS_HttpServer_Dummy_properties_typeProperties_url": {
+						"value": "[parameters('lS_HttpServer_Dummy_properties_typeProperties_url')]"
 					}
 				}
 			},
