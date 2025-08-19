@@ -1,0 +1,19 @@
+{
+	"name": "Http_zip_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "lS_HttpServer_Dummy",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			},
+			"compression": {
+				"type": "ZipDeflate"
+			}
+		}
+	}
+}
