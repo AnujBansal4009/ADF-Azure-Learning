@@ -105,7 +105,13 @@
 								},
 								"dataset": {
 									"referenceName": "InputFolder_DS_lookup",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"Filename": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
 								},
 								"firstRowOnly": false
 							}
